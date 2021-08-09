@@ -18,6 +18,7 @@ if sys.version_info[0] == 2:
 else:
     from urllib import request as urllib_request
 
+
 class NDATokenGenerator(object):
     __schemas = {
         'soap': 'http://schemas.xmlsoap.org/soap/envelope/',
@@ -31,13 +32,17 @@ class NDATokenGenerator(object):
 
     def generate_token(self, username, password):
         logging.info('request to generate AWS token')
-        encoded_password = self.__encode_password(password)
-        request_xml = self.__construct_request_xml(username, encoded_password)
-        return self.__make_request(request_xml)
+        try:
+            encoded_password = self.__encode_password(password)
+            request_xml = self.__construct_request_xml(username, encoded_password)
+            return self.__make_request(request_xml)
+        except:
+            encoded_password = self.__encode_password(password, hasher=hashlib.sha256())
+            request_xml = self.__construct_request_xml(username, encoded_password)
+            return self.__make_request(request_xml)
 
-    def __encode_password(self, password):
+    def __encode_password(self, password, hasher=hashlib.sha1()):
         logging.debug('encoding password')
-        hasher = hashlib.sha1()
         hasher.update(password.encode('utf-8'))
         digest_bytes = hasher.digest()
         byte_string = binascii.hexlify(digest_bytes)
